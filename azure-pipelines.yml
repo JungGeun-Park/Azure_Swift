@@ -67,19 +67,19 @@ steps:
   displayName: 'Increment Build Number'
 
 - script: |
-    # Extract Bundle ID from Info.plist before creating ExportOptions.plist
+    # Try to extract CFBundleIdentifier from Info.plist
     INFO_PLIST_PATH="$(Build.SourcesDirectory)/$(APP_NAME)/Info.plist"
+    BUNDLE_ID=$(defaults read "$INFO_PLIST_PATH" CFBundleIdentifier 2>/dev/null)
 
-    if [[ -f "$INFO_PLIST_PATH" ]]; then
-      # Using PlistBuddy to extract CFBundleIdentifier
-      BUNDLE_ID=$(/usr/libexec/PlistBuddy -c "Print CFBundleIdentifier" "$INFO_PLIST_PATH" 2>/dev/null)
-      if [[ -z "$BUNDLE_ID" ]]; then
-        echo "Error: CFBundleIdentifier not found in Info.plist"
-        exit 1
-      fi
-    else
-      echo "Error: Info.plist not found at path $INFO_PLIST_PATH"
-      exit 1
+    # If not found in Info.plist, use xcodebuild to extract it
+    if [[ -z "$BUNDLE_ID" ]]; then
+        echo "CFBundleIdentifier not found in Info.plist. Trying to extract it using xcodebuild..."
+        BUNDLE_ID=$(xcodebuild -showBuildSettings -scheme "$(SCHEME_NAME)" -workspace "$(Build.SourcesDirectory)/$(APP_NAME).xcodeproj" | grep "PRODUCT_BUNDLE_IDENTIFIER" | sed 's/PRODUCT_BUNDLE_IDENTIFIER = //')
+
+        if [[ -z "$BUNDLE_ID" ]]; then
+            echo "Error: CFBundleIdentifier not found."
+            exit 1
+        fi
     fi
 
     echo "##vso[task.setvariable variable=BUNDLE_ID]$BUNDLE_ID"
