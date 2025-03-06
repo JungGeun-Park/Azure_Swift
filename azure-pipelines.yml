@@ -69,6 +69,11 @@ steps:
 - script: |
     EXPORT_DIR="$HOME/exports"
     mkdir -p "$EXPORT_DIR"
+    
+    # Get the Bundle ID from Info.plist
+    BUNDLE_ID=$(/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$(Build.SourcesDirectory)/$(APP_NAME)/Info.plist")
+    
+    # Create ExportOptions.plist
     cat << EOF > "$EXPORT_DIR/ExportOptions.plist"
     <?xml version="1.0" encoding="UTF-8"?>
     <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -78,9 +83,16 @@ steps:
         <string>app-store</string>
         <key>teamID</key>
         <string>${{ parameters.TEAM_ID }}</string>
+        <key>provisioningProfiles</key>
+        <dict>
+            <key>$BUNDLE_ID</key>
+            <string>${{ parameters.PROVISIONING_PROFILE_NAME }}</string>
+        </dict>
     </dict>
     </plist>
     EOF
+
+    echo "ExportOptions.plist created with provisioningProfiles and bundle ID."
   displayName: 'Create ExportOptions.plist'
 
 - script: |
