@@ -88,27 +88,18 @@ steps:
     if [[ -z "$BUNDLE_ID" ]]; then
         echo "CFBundleIdentifier not found in Info.plist. Trying to extract it using xcodebuild..."
         
-        # Print Xcode version
-        xcodebuild -version
-        
-        # List available schemes
-        echo "Available schemes:"
-        xcodebuild -list -project "${BUILD_SOURCESDIRECTORY}/Azure_Swift.xcodeproj"
-        
-        echo "Attempting to extract bundle identifier using xcodebuild..."
         XCODEBUILD_OUTPUT=$(xcodebuild -showBuildSettings -project "${BUILD_SOURCESDIRECTORY}/Azure_Swift.xcodeproj" -scheme "${SCHEME_NAME}" 2>&1)
         echo "xcodebuild output:"
         echo "$XCODEBUILD_OUTPUT"
         
         BUNDLE_ID=$(echo "$XCODEBUILD_OUTPUT" | grep -m 1 "PRODUCT_BUNDLE_IDENTIFIER" | sed 's/.*= //' | tr -d '[:space:]')
         echo "Extracted BUNDLE_ID: $BUNDLE_ID"
+    fi
 
-        if [[ -z "$BUNDLE_ID" ]]; then
-            echo "Error: PRODUCT_BUNDLE_IDENTIFIER not found in xcodebuild output."
-            echo "Falling back to manual input. Please provide the correct bundle identifier:"
-            BUNDLE_ID="com.example.AzureSwift"  # Replace this with your actual bundle ID
-            echo "Using fallback BUNDLE_ID: $BUNDLE_ID"
-        fi
+    # If still not found, use a fallback value
+    if [[ -z "$BUNDLE_ID" || "$BUNDLE_ID" == "NO" ]]; then
+        echo "Error: Bundle identifier not found. Using fallback value."
+        BUNDLE_ID="com.yourcompany.AzureSwift"  # Replace with your actual bundle ID
     fi
 
     echo "Final BUNDLE_ID: $BUNDLE_ID"
