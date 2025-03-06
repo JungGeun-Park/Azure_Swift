@@ -67,16 +67,41 @@ steps:
   displayName: 'Increment Build Number'
 
 - script: |
+    echo "Starting bundle identifier extraction process..."
+    echo "BUILD_SOURCESDIRECTORY: $BUILD_SOURCESDIRECTORY"
+    echo "APP_NAME: $APP_NAME"
+    echo "SCHEME_NAME: $SCHEME_NAME"
+
     # Try to extract CFBundleIdentifier from Info.plist
-    INFO_PLIST_PATH="$(Build.SourcesDirectory)/$(APP_NAME)/Info.plist"
-    BUNDLE_ID=$(defaults read "$INFO_PLIST_PATH" CFBundleIdentifier 2>/dev/null)
+    INFO_PLIST_PATH="${BUILD_SOURCESDIRECTORY}/${APP_NAME}/Info.plist"
+    echo "Attempting to read Info.plist from: $INFO_PLIST_PATH"
+    
+    if [ -f "$INFO_PLIST_PATH" ]; then
+        echo "Info.plist file found."
+        BUNDLE_ID=$(/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$INFO_PLIST_PATH" 2>/dev/null)
+        echo "PlistBuddy output: $BUNDLE_ID"
+    else
+        echo "Info.plist file not found at $INFO_PLIST_PATH"
+    fi
 
     # If not found in Info.plist, use xcodebuild to extract it
     if [[ -z "$BUNDLE_ID" ]]; then
         echo "CFBundleIdentifier not found in Info.plist. Trying to extract it using xcodebuild..."
         
-        # Extracting the bundle identifier using xcodebuild
-        BUNDLE_ID=$(xcodebuild -showBuildSettings -project "$(Build.SourcesDirectory)/Azure_Swift.xcodeproj" -scheme "$(SCHEME_NAME)" | grep -m 1 "PRODUCT_BUNDLE_IDENTIFIER" | sed 's/PRODUCT_BUNDLE_IDENTIFIER = //g' | tr -d '\r' | xargs)
+        # Print Xcode version
+        xcodebuild -version
+        
+        # List available schemes
+        echo "Available schemes:"
+        xcodebuild -list -project "${BUILD_SOURCESDIRECTORY}/Azure_Swift.xcodeproj"
+        
+        echo "Attempting to extract bundle identifier using xcodebuild..."
+        XCODEBUILD_OUTPUT=$(xcodebuild -showBuildSettings -project "${BUILD_SOURCESDIRECTORY}/Azure_Swift.xcodeproj" -scheme "${SCHEME_NAME}" 2>&1)
+        echo "xcodebuild output:"
+        echo "$XCODEBUILD_OUTPUT"
+        
+        BUNDLE_ID=$(echo "$XCODEBUILD_OUTPUT" | grep -m 1 "PRODUCT_BUNDLE_IDENTIFIER" | sed 's/.*= //' | tr -d '[:space:]')
+        echo "Extracted BUNDLE_ID: $BUNDLE_ID"
 
         if [[ -z "$BUNDLE_ID" ]]; then
             echo "Error: CFBundleIdentifier not found."
@@ -84,8 +109,9 @@ steps:
         fi
     fi
 
+    echo "Final BUNDLE_ID: $BUNDLE_ID"
     echo "##vso[task.setvariable variable=BUNDLE_ID]$BUNDLE_ID"
-    echo "##vso[task.logissue type=warning] Extracted Bundle ID: $BUNDLE_ID"
+    echo "##vso[task.logissue type=warning]Extracted Bundle ID: $BUNDLE_ID"
 
     # Create ExportOptions.plist after extracting the Bundle ID
     EXPORT_DIR="$HOME/exports"
@@ -101,7 +127,6 @@ steps:
         <string>${{ parameters.TEAM_ID }}</string>
         <key>provisioningProfiles</key>
         <dict>
-            <!-- Using the extracted Bundle ID here -->
             <key>$BUNDLE_ID</key>
             <string>${{ parameters.PROVISIONING_PROFILE_NAME }}</string>
         </dict>
@@ -111,7 +136,8 @@ steps:
 
     echo "ExportOptions.plist created with provisioningProfiles and bundle ID."
     cat "$EXPORT_DIR/ExportOptions.plist"  # Output the created plist content for debugging
-  displayName: 'Create ExportOptions.plist with Bundle ID'
+  displayName: 'Extract Bundle ID and Create ExportOptions.plist'
+
 
 - script: |
     # Define paths
