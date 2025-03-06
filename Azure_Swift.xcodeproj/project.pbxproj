@@ -6,8 +6,13 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		2596185B2D792B3500AF27D6 /* libStaticAppSec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2596185A2D792B3500AF27D6 /* libStaticAppSec.a */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		2596183B2D79299200AF27D6 /* Azure_Swift.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Azure_Swift.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		2596185A2D792B3500AF27D6 /* libStaticAppSec.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libStaticAppSec.a; path = AppSealingSDK/Libraries/libStaticAppSec.a; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -36,6 +41,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2596185B2D792B3500AF27D6 /* libStaticAppSec.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -46,6 +52,7 @@
 			isa = PBXGroup;
 			children = (
 				2596183D2D79299200AF27D6 /* Azure_Swift */,
+				259618592D792B3500AF27D6 /* Frameworks */,
 				2596183C2D79299200AF27D6 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -56,6 +63,14 @@
 				2596183B2D79299200AF27D6 /* Azure_Swift.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		259618592D792B3500AF27D6 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				2596185A2D792B3500AF27D6 /* libStaticAppSec.a */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -95,6 +110,7 @@
 				TargetAttributes = {
 					2596183A2D79299200AF27D6 = {
 						CreatedOnToolsVersion = 16.1;
+						LastSwiftMigration = 1610;
 					};
 				};
 			};
@@ -143,6 +159,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 22X77ENQ2H;
@@ -157,10 +174,16 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/AppSealingSDK/Libraries",
+				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.inka.Azure-Swift";
+				PRODUCT_BUNDLE_IDENTIFIER = com.inka.swift;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "Azure_Swift/Azure_Swift-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -171,6 +194,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 22X77ENQ2H;
@@ -185,10 +209,15 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/AppSealingSDK/Libraries",
+				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.inka.Azure-Swift";
+				PRODUCT_BUNDLE_IDENTIFIER = com.inka.swift;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "Azure_Swift/Azure_Swift-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
