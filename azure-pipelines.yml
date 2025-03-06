@@ -96,10 +96,10 @@ steps:
         echo "Extracted BUNDLE_ID: $BUNDLE_ID"
     fi
 
-    # If still not found, use a fallback value
-    if [[ -z "$BUNDLE_ID" || "$BUNDLE_ID" == "NO" ]]; then
-        echo "Error: Bundle identifier not found. Using fallback value."
-        BUNDLE_ID="com.yourcompany.AzureSwift"  # Replace with your actual bundle ID
+    # Ensure BUNDLE_ID is not empty
+    if [[ -z "$BUNDLE_ID" ]]; then
+        echo "Error: Bundle identifier not found."
+        exit 1
     fi
 
     echo "Final BUNDLE_ID: $BUNDLE_ID"
