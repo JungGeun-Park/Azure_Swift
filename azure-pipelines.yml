@@ -70,9 +70,11 @@ steps:
     EXPORT_DIR="$HOME/exports"
     mkdir -p "$EXPORT_DIR"
     
-    # Get the Bundle ID from Info.plist
-    BUNDLE_ID=$(/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$(Build.SourcesDirectory)/$(APP_NAME)/Info.plist")
-    
+    # Extract Bundle ID from Info.plist before creating ExportOptions.plist
+    BUNDLE_ID=$(defaults read "$(Build.SourcesDirectory)/$(APP_NAME)/Info.plist" CFBundleIdentifier)
+    echo "##vso[task.setvariable variable=BUNDLE_ID]$BUNDLE_ID"
+    echo "##vso[task.logissue type=warning] Extracted Bundle ID: $BUNDLE_ID"
+        
     # Create ExportOptions.plist
     cat << EOF > "$EXPORT_DIR/ExportOptions.plist"
     <?xml version="1.0" encoding="UTF-8"?>
