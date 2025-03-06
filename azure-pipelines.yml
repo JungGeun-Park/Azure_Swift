@@ -73,15 +73,7 @@ steps:
     # If not found in Info.plist, use xcodebuild to extract it
     if [[ -z "$BUNDLE_ID" ]]; then
         echo "CFBundleIdentifier not found in Info.plist. Trying to extract it using xcodebuild..."
-        
-        XCODEBUILD_OUTPUT=$(xcodebuild -showBuildSettings -project "${BUILD_SOURCESDIRECTORY}/Azure_Swift.xcodeproj" -scheme "${SCHEME_NAME}" 2>&1)
-        BUNDLE_ID=$(echo "$XCODEBUILD_OUTPUT" | grep -m 1 "PRODUCT_BUNDLE_IDENTIFIER" | sed 's/.*= //' | tr -d '[:space:]')
-    fi
-
-    # If still not found, search for com.inka.swift directly in the build settings
-    if [[ -z "$BUNDLE_ID" ]]; then
-        echo "Searching for com.inka.swift in build settings..."
-        BUNDLE_ID=$(echo "$XCODEBUILD_OUTPUT" | grep -o 'com.inka.swift' | head -n 1)
+        BUNDLE_ID=$(xcodebuild -showBuildSettings -project "${BUILD_SOURCESDIRECTORY}/Azure_Swift.xcodeproj" -scheme "${SCHEME_NAME}" | grep -m 1 "PRODUCT_BUNDLE_IDENTIFIER" | sed 's/.*= //' | tr -d '[:space:]')
     fi
 
     # Ensure BUNDLE_ID is not empty
