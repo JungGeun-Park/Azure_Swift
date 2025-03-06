@@ -2,7 +2,7 @@ trigger:
 - develop
 
 pool:
-  name: AS-SELF
+  name: APPSEALING
 
 parameters:
 - name: APPLE_ID
@@ -20,32 +20,32 @@ parameters:
 
 steps:
 - script: |
-    # # Define paths
-    # P12_CERT_PATH="$(Build.SourcesDirectory)/distribution.p12"
-    # PROVISIONING_PROFILE_PATH="$(Build.SourcesDirectory)/profile.mobileprovision"
-    # KEYCHAIN_PATH="$HOME/Library/Keychains/temp-keychain.keychain-db"
-    # KEYCHAIN_PASSWORD="temp123"
+    # Define paths
+    P12_CERT_PATH="$(Build.SourcesDirectory)/distribution.p12"
+    PROVISIONING_PROFILE_PATH="$(Build.SourcesDirectory)/profile.mobileprovision"
+    KEYCHAIN_PATH="$HOME/Library/Keychains/temp-keychain.keychain-db"
+    KEYCHAIN_PASSWORD="temp123"
 
-    # echo "Creating temporary keychain..."
-    # security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+    echo "Creating temporary keychain..."
+    security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
 
-    # echo "Setting temporary keychain as default..."
-    # security list-keychains -s "$KEYCHAIN_PATH"
-    # security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+    echo "Setting temporary keychain as default..."
+    security list-keychains -s "$KEYCHAIN_PATH"
+    security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
 
-    # echo "Importing distribution certificate (PKCS#12) into temporary keychain..."
-    # security import "$P12_CERT_PATH" -k "$KEYCHAIN_PATH" -P "123456" -T /usr/bin/codesign
+    echo "Importing distribution certificate (PKCS#12) into temporary keychain..."
+    security import "$P12_CERT_PATH" -k "$KEYCHAIN_PATH" -P "123456" -T /usr/bin/codesign
 
-    # echo "Allowing codesign access..."
-    # security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+    echo "Allowing codesign access..."
+    security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
 
-    # echo "Listing installed identities..."
-    # security find-identity -v
+    echo "Listing installed identities..."
+    security find-identity -v
 
-    # echo "Installing provisioning profile..."
-    # xcrun -sdk iphoneos provisioningprofiles import "$PROVISIONING_PROFILE_PATH"
+    echo "Installing provisioning profile..."
+    xcrun -sdk iphoneos provisioningprofiles import "$PROVISIONING_PROFILE_PATH"
 
-    # echo "Provisioning profile successfully installed."
+    echo "Provisioning profile successfully installed."
   displayName: 'Setup Temporary Keychain and Install Certificate'
 
 - script: |
@@ -163,13 +163,13 @@ steps:
   displayName: 'Upload to TestFlight'
 
 - script: |
-    # echo "Deleting temporary keychain..."
-    # TEMP_KEYCHAIN_PATH="$HOME/Library/Keychains/temp-keychain.keychain-db"
-    # if [ -f "$TEMP_KEYCHAIN_PATH" ]; then
-    #     # Delete only the temporary keychain, not the default login keychain
-    #     security delete-keychain "$TEMP_KEYCHAIN_PATH"
-    #     echo "Temporary keychain deleted successfully."
-    # else
-    #     echo "Temporary keychain not found. Skipping deletion."
-    # fi
+    echo "Deleting temporary keychain..."
+    TEMP_KEYCHAIN_PATH="$HOME/Library/Keychains/temp-keychain.keychain-db"
+    if [ -f "$TEMP_KEYCHAIN_PATH" ]; then
+        # Delete only the temporary keychain, not the default login keychain
+        security delete-keychain "$TEMP_KEYCHAIN_PATH"
+        echo "Temporary keychain deleted successfully."
+    else
+        echo "Temporary keychain not found. Skipping deletion."
+    fi
   displayName: 'Cleanup Temporary Keychain'
