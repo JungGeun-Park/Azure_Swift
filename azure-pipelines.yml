@@ -67,14 +67,12 @@ steps:
   displayName: 'Increment Build Number'
 
 - script: |
-    EXPORT_DIR="$HOME/exports"
-    mkdir -p "$EXPORT_DIR"
-    
     # Extract Bundle ID from Info.plist before creating ExportOptions.plist
     INFO_PLIST_PATH="$(Build.SourcesDirectory)/$(APP_NAME)/Info.plist"
 
     if [[ -f "$INFO_PLIST_PATH" ]]; then
-      BUNDLE_ID=$(defaults read "$INFO_PLIST_PATH" CFBundleIdentifier)
+      # Using PlistBuddy to extract CFBundleIdentifier
+      BUNDLE_ID=$(/usr/libexec/PlistBuddy -c "Print CFBundleIdentifier" "$INFO_PLIST_PATH" 2>/dev/null)
       if [[ -z "$BUNDLE_ID" ]]; then
         echo "Error: CFBundleIdentifier not found in Info.plist"
         exit 1
@@ -86,9 +84,10 @@ steps:
 
     echo "##vso[task.setvariable variable=BUNDLE_ID]$BUNDLE_ID"
     echo "##vso[task.logissue type=warning] Extracted Bundle ID: $BUNDLE_ID"
-    
-            
-    # Create ExportOptions.plist
+
+    # Create ExportOptions.plist after extracting the Bundle ID
+    EXPORT_DIR="$HOME/exports"
+    mkdir -p "$EXPORT_DIR"
     cat << EOF > "$EXPORT_DIR/ExportOptions.plist"
     <?xml version="1.0" encoding="UTF-8"?>
     <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -100,6 +99,7 @@ steps:
         <string>${{ parameters.TEAM_ID }}</string>
         <key>provisioningProfiles</key>
         <dict>
+            <!-- Using the extracted Bundle ID here -->
             <key>$BUNDLE_ID</key>
             <string>${{ parameters.PROVISIONING_PROFILE_NAME }}</string>
         </dict>
@@ -108,8 +108,8 @@ steps:
     EOF
 
     echo "ExportOptions.plist created with provisioningProfiles and bundle ID."
-    cat "$EXPORT_DIR/ExportOptions.plist"  # Output the created plist content for debugging     
-  displayName: 'Create ExportOptions.plist'
+    cat "$EXPORT_DIR/ExportOptions.plist"  # Output the created plist content for debugging
+  displayName: 'Create ExportOptions.plist with Bundle ID'
 
 - script: |
     # Define paths
