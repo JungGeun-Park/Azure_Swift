@@ -11,9 +11,6 @@ parameters:
 - name: APP_SPECIFIC_PASSWORD
   type: string
   default: 'qbrz-hmfz-robj-eohm'
-- name: BUNDLE_ID
-  type: string
-  default: 'com.inka.swift'
 - name: TEAM_ID
   type: string
   default: '22X77ENQ2H'
@@ -70,6 +67,25 @@ steps:
   displayName: 'Increment Build Number'
 
 - script: |
+    INFO_PLIST_PATH="${BUILD_SOURCESDIRECTORY}/${APP_NAME}/Info.plist"
+    BUNDLE_ID=$(/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$INFO_PLIST_PATH" 2>/dev/null)
+
+    # If not found in Info.plist, use xcodebuild to extract it
+    if [[ -z "$BUNDLE_ID" ]]; then
+        echo "CFBundleIdentifier not found in Info.plist. Trying to extract it using xcodebuild..."
+        BUNDLE_ID=$(xcodebuild -showBuildSettings -project "${BUILD_SOURCESDIRECTORY}/Azure_Swift.xcodeproj" -scheme "${SCHEME_NAME}" | grep -E '^[[:space:]]*PRODUCT_BUNDLE_IDENTIFIER[[:space:]]*=' | sed 's/.*= //')
+    fi
+
+    # Ensure BUNDLE_ID is not empty
+    if [[ -z "$BUNDLE_ID" ]]; then
+        echo "Error: Bundle identifier not found."
+        exit 1
+    fi
+
+    echo "Final BUNDLE_ID: $BUNDLE_ID"
+    echo "##vso[task.setvariable variable=BUNDLE_ID]$BUNDLE_ID"
+    echo "##vso[task.logissue type=warning]Extracted Bundle ID: $BUNDLE_ID"
+
     # Create ExportOptions.plist after extracting the Bundle ID
     EXPORT_DIR="$HOME/exports"
     mkdir -p "$EXPORT_DIR"
@@ -84,7 +100,7 @@ steps:
         <string>${{ parameters.TEAM_ID }}</string>
         <key>provisioningProfiles</key>
         <dict>
-            <key>${{ parameters.BUNDLE_ID }}</key>
+            <key>$BUNDLE_ID</key>
             <string>${{ parameters.PROVISIONING_PROFILE_NAME }}</string>
         </dict>
     </dict>
