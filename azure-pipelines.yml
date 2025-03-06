@@ -43,7 +43,8 @@ steps:
     security find-identity -v
 
     echo "Installing provisioning profile..."
-    xcrun provisioningprofiles import "$PROVISIONING_PROFILE_PATH"
+    # Xcode 15에서 provisioning profile 설치 방법 수정
+    cp "$PROVISIONING_PROFILE_PATH" ~/Library/MobileDevice/Provisioning\ Profiles/
 
     echo "Provisioning profile successfully installed."
   displayName: 'Setup Temporary Keychain and Install Certificate'
@@ -135,6 +136,12 @@ steps:
 
 - script: |
     echo "Deleting temporary keychain..."
-    # security delete-keychain "$HOME/Library/Keychains/temp-keychain.keychain-db"
-    # echo "Temporary keychain deleted successfully."
+    TEMP_KEYCHAIN_PATH="$HOME/Library/Keychains/temp-keychain.keychain-db"
+    if [ -f "$TEMP_KEYCHAIN_PATH" ]; then
+        # Delete only the temporary keychain, not the default login keychain
+        security delete-keychain "$TEMP_KEYCHAIN_PATH"
+        echo "Temporary keychain deleted successfully."
+    else
+        echo "Temporary keychain not found. Skipping deletion."
+    fi
   displayName: 'Cleanup Temporary Keychain'
