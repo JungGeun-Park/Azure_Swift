@@ -48,7 +48,7 @@ steps:
 
     # ✅ 인증서를 강제로 신뢰하도록 추가
     echo "Adding trusted certificate..."
-    sudo security add-trusted-cert -d -r trustRoot -k "$KEYCHAIN_PATH" "$CERT_PATH"
+    security add-trusted-cert -d -r trustRoot -k "$KEYCHAIN_PATH" "$CERT_PATH"
 
     # ✅ Keychain 다시 적용
     security list-keychains -d user -s "$KEYCHAIN_PATH"
