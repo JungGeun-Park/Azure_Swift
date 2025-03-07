@@ -45,8 +45,8 @@ steps:
     security set-key-partition-list -S apple-tool:,apple: -s -k "temp123" "$HOME/Library/Keychains/temp-keychain.keychain-db"
     security find-identity -v "$HOME/Library/Keychains/temp-keychain.keychain-db"
 
-    sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer
-    sudo xcodebuild -runFirstLaunch
+    xcode-select --switch /Applications/Xcode.app/Contents/Developer
+    xcodebuild -runFirstLaunch
 
     echo "Installing provisioning profile..."
     xcrun -sdk iphoneos provisioningprofiles import "$PROVISIONING_PROFILE_PATH"
