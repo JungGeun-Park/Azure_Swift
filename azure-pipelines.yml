@@ -45,9 +45,10 @@ steps:
     security import "$P12_CERT_PATH" -k "$KEYCHAIN_PATH" -P "123456" -T /usr/bin/codesign
     security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
 
-    # ✅ 인증서를 신뢰하도록 설정
-    echo "Setting the certificate as trusted in the keychain..."
-    security trust-settings-import "$P12_CERT_PATH" -k "$KEYCHAIN_PATH"
+    # 인증서 신뢰 수동 설정
+    echo "Manually setting certificate as trusted for codesigning..."
+    security set-keychain-settings -t 3600 -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+    security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
 
     # Keychain 설정 확인
     security find-identity -v -p codesigning "$KEYCHAIN_PATH"
