@@ -26,21 +26,27 @@ steps:
     KEYCHAIN_PATH="$HOME/Library/Keychains/temp-keychain.keychain-db"
     KEYCHAIN_PASSWORD="temp123"
 
+    # 기존 키체인이 있으면 삭제
+    if security list-keychains | grep -q "temp-keychain.keychain-db"; then
+        echo "Deleting existing temporary keychain..."
+        security delete-keychain "$HOME/Library/Keychains/temp-keychain.keychain-db"
+    fi
+
     echo "Creating temporary keychain..."
     security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
 
     echo "Setting temporary keychain as default..."
-    security list-keychains -s "$KEYCHAIN_PATH"
-    security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+    security list-keychains -d user -s "$HOME/Library/Keychains/temp-keychain.keychain-db"
+    security unlock-keychain -p "temp123" "$HOME/Library/Keychains/temp-keychain.keychain-db"
+    security set-keychain-settings -lut 3600 "$HOME/Library/Keychains/temp-keychain.keychain-db"
 
     echo "Importing distribution certificate (PKCS#12) into temporary keychain..."
-    security import "$P12_CERT_PATH" -k "$KEYCHAIN_PATH" -P "123456" -T /usr/bin/codesign
+    security import "$P12_CERT_PATH" -k "$HOME/Library/Keychains/temp-keychain.keychain-db" -P "123456" -T /usr/bin/codesign
+    security set-key-partition-list -S apple-tool:,apple: -s -k "temp123" "$HOME/Library/Keychains/temp-keychain.keychain-db"
+    security find-identity -v "$HOME/Library/Keychains/temp-keychain.keychain-db"
 
-    echo "Allowing codesign access..."
-    security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-
-    echo "Listing installed identities..."
-    security find-identity -v
+    sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer
+    sudo xcodebuild -runFirstLaunch
 
     echo "Installing provisioning profile..."
     xcrun -sdk iphoneos provisioningprofiles import "$PROVISIONING_PROFILE_PATH"
