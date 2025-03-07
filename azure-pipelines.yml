@@ -22,7 +22,6 @@ steps:
 - script: |
     # Define paths
     P12_CERT_PATH="$(Build.SourcesDirectory)/distribution.p12"
-    CERT_PATH="$(Build.SourcesDirectory)/distribution.cer"
     PROVISIONING_PROFILE_PATH="$(Build.SourcesDirectory)/profile.mobileprovision"
     KEYCHAIN_PATH="$HOME/Library/Keychains/temp-keychain.keychain-db"
     KEYCHAIN_PASSWORD="temp123"
@@ -46,19 +45,14 @@ steps:
     security import "$P12_CERT_PATH" -k "$KEYCHAIN_PATH" -P "123456" -T /usr/bin/codesign
     security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
 
-    # ✅ 인증서를 강제로 신뢰하도록 추가
-    echo "Adding trusted certificate..."
-    security add-trusted-cert -d -r trustRoot -k "$KEYCHAIN_PATH" "$CERT_PATH"
+    # ✅ 인증서를 신뢰하도록 설정
+    echo "Setting the certificate as trusted in the keychain..."
+    security trust-settings-import "$P12_CERT_PATH" -k "$KEYCHAIN_PATH"
 
-    # ✅ Keychain 다시 적용
-    security list-keychains -d user -s "$KEYCHAIN_PATH"
-    security default-keychain -s "$KEYCHAIN_PATH"
-    security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-
-    # 확인
+    # Keychain 설정 확인
     security find-identity -v -p codesigning "$KEYCHAIN_PATH"
 
-    echo "✅ Keychain 설정 완료!"
+    echo "✅ Keychain and certificate trust setup completed!"
   displayName: 'Setup Temporary Keychain and Install Certificate'
 
 - script: |
