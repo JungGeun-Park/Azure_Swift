@@ -22,6 +22,7 @@ steps:
 - script: |
     # Define paths
     P12_CERT_PATH="$(Build.SourcesDirectory)/distribution.p12"
+    CERT_PATH="$(Build.SourcesDirectory)/distribution.cer"
     PROVISIONING_PROFILE_PATH="$(Build.SourcesDirectory)/profile.mobileprovision"
     KEYCHAIN_PATH="$HOME/Library/Keychains/temp-keychain.keychain-db"
     KEYCHAIN_PASSWORD="temp123"
@@ -29,26 +30,35 @@ steps:
     # 기존 키체인이 있으면 삭제
     if security list-keychains | grep -q "temp-keychain.keychain-db"; then
         echo "Deleting existing temporary keychain..."
-        security delete-keychain "$HOME/Library/Keychains/temp-keychain.keychain-db"
+        security delete-keychain "$KEYCHAIN_PATH"
     fi
 
     echo "Creating temporary keychain..."
     security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
 
     echo "Setting temporary keychain as default..."
-    security list-keychains -d user -s "$HOME/Library/Keychains/temp-keychain.keychain-db"
-    security unlock-keychain -p "temp123" "$HOME/Library/Keychains/temp-keychain.keychain-db"
-    security set-keychain-settings -lut 3600 "$HOME/Library/Keychains/temp-keychain.keychain-db"
+    security list-keychains -d user -s "$KEYCHAIN_PATH"
+    security default-keychain -s "$KEYCHAIN_PATH"
+    security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+    security set-keychain-settings -lut 3600 "$KEYCHAIN_PATH"
 
     echo "Importing distribution certificate (PKCS#12) into temporary keychain..."
-    security import "$P12_CERT_PATH" -k "$HOME/Library/Keychains/temp-keychain.keychain-db" -P "123456" -T /usr/bin/codesign
-    security set-key-partition-list -S apple-tool:,apple: -s -k "temp123" "$HOME/Library/Keychains/temp-keychain.keychain-db"
-    security find-identity -v "$HOME/Library/Keychains/temp-keychain.keychain-db"
+    security import "$P12_CERT_PATH" -k "$KEYCHAIN_PATH" -P "123456" -T /usr/bin/codesign
+    security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
 
-    mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
-    cp "$PROVISIONING_PROFILE_PATH" "$HOME/Library/MobileDevice/Provisioning Profiles/"
-    security cms -D -i "$HOME/Library/MobileDevice/Provisioning Profiles/$(basename "$PROVISIONING_PROFILE_PATH")"
-    echo "Provisioning profile successfully installed."
+    # ✅ 인증서를 강제로 신뢰하도록 추가
+    echo "Adding trusted certificate..."
+    sudo security add-trusted-cert -d -r trustRoot -k "$KEYCHAIN_PATH" "$CERT_PATH"
+
+    # ✅ Keychain 다시 적용
+    security list-keychains -d user -s "$KEYCHAIN_PATH"
+    security default-keychain -s "$KEYCHAIN_PATH"
+    security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+    # 확인
+    security find-identity -v -p codesigning "$KEYCHAIN_PATH"
+
+    echo "✅ Keychain 설정 완료!"
   displayName: 'Setup Temporary Keychain and Install Certificate'
 
 - script: |
