@@ -4,19 +4,11 @@ trigger:
 pool:
   name: APPSEALING
 
-parameters:
-- name: APPLE_ID
-  type: string
-  default: 'puzznic@inka.co.kr'
-- name: APP_SPECIFIC_PASSWORD
-  type: string
-  default: 'qbrz-hmfz-robj-eohm'
-- name: TEAM_ID
-  type: string
-  default: '22X77ENQ2H'
-- name: PROVISIONING_PROFILE_NAME
-  type: string
-  default: 'AppSealing Wildcard Distribution Profile'
+variables:
+  APPLE_ID: 'puzznic@inka.co.kr'
+  APP_SPECIFIC_PASSWORD: 'qbrz-hmfz-robj-eohm'
+  TEAM_ID: '22X77ENQ2H'
+  PROVISIONING_PROFILE_NAME: 'AppSealing Wildcard Distribution Profile'
 
 steps:
 - script: |
@@ -26,7 +18,6 @@ steps:
     KEYCHAIN_PATH="$HOME/Library/Keychains/temp-keychain.keychain-db"
     KEYCHAIN_PASSWORD="temp123"
 
-    # 기존 키체인이 있으면 삭제
     if security list-keychains | grep -q "temp-keychain.keychain-db"; then
         echo "Deleting existing temporary keychain..."
         security delete-keychain "$KEYCHAIN_PATH"
@@ -44,9 +35,6 @@ steps:
     echo "Importing distribution certificate (PKCS#12) into temporary keychain..."
     security import "$P12_CERT_PATH" -k "$KEYCHAIN_PATH" -P "123456" -T /usr/bin/codesign
     security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-
-    # 인증서 신뢰 수동 설정 (codesigning만 신뢰하도록 설정)
-    echo "✅ Keychain and certificate trust setup completed!"
     security find-identity -v "$KEYCHAIN_PATH"
   displayName: 'Setup Temporary Keychain and Install Certificate'
 
