@@ -87,11 +87,11 @@ steps:
         <key>method</key>
         <string>app-store</string>
         <key>teamID</key>
-        <string>${{ parameters.TEAM_ID }}</string>
+        <string>$(TEAM_ID)</string>
         <key>provisioningProfiles</key>
         <dict>
             <key>$BUNDLE_ID</key>
-            <string>${{ parameters.PROVISIONING_PROFILE_NAME }}</string>
+            <string>$(PROVISIONING_PROFILE_NAME)</string>
         </dict>
     </dict>
     </plist>
@@ -120,8 +120,8 @@ steps:
                clean archive \
                CODE_SIGN_IDENTITY="iPhone Distribution" \
                CODE_SIGN_STYLE="Manual" \
-               DEVELOPMENT_TEAM="${{ parameters.TEAM_ID }}" \
-               PROVISIONING_PROFILE_SPECIFIER="${{ parameters.PROVISIONING_PROFILE_NAME }}" \
+               DEVELOPMENT_TEAM="$(TEAM_ID)" \
+               PROVISIONING_PROFILE_SPECIFIER="$(PROVISIONING_PROFILE_NAME)" \
                -archivePath "$ARCHIVE_PATH"
 
     echo "Exporting IPA..."
@@ -149,7 +149,7 @@ steps:
 
 - script: |
     set -x
-    xcrun altool --upload-app -f "$(Build.ArtifactStagingDirectory)/$(APP_NAME).ipa" -t ios -u "${{ parameters.APPLE_ID }}" -p "${{ parameters.APP_SPECIFIC_PASSWORD }}"
+    xcrun altool --upload-app -f "$(Build.ArtifactStagingDirectory)/$(APP_NAME).ipa" -t ios -u "$(APPLE_ID)" -p "$(APP_SPECIFIC_PASSWORD)"
   displayName: 'Upload to TestFlight'
 
 - script: |
