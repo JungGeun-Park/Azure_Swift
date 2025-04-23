@@ -39,8 +39,8 @@ steps:
     APP_NAME=$(xcodebuild -list -json | (python -c 'import sys, json; print(json.load(sys.stdin)["project"]["targets"][0])' || python3 -c 'import sys, json; print(json.load(sys.stdin)["project"]["targets"][0])'))
     echo "##vso[task.setvariable variable=SCHEME_NAME]$SCHEME_NAME"
     echo "##vso[task.setvariable variable=APP_NAME]$APP_NAME"
-    echo "##vso[task.logissue type=warning] Extracted SCHEME_NAME: $SCHEME_NAME"
-    echo "##vso[task.logissue type=warning] Extracted APP_NAME: $APP_NAME"
+    echo "##[debug] Extracted SCHEME_NAME: $SCHEME_NAME"
+    echo "##[debug] Extracted APP_NAME: $APP_NAME"
   displayName: 'Extract Scheme and App Name'
 
 - script: |
@@ -49,7 +49,7 @@ steps:
     agvtool next-version -all
     NEW_BUILD_NUMBER=$(agvtool what-version -terse)
     echo "##vso[task.setvariable variable=BUILD_NUMBER]$NEW_BUILD_NUMBER"
-    echo "##vso[task.logissue type=warning] New Build Number: $NEW_BUILD_NUMBER"
+    echo "##[debug] New Build Number: $NEW_BUILD_NUMBER"
   displayName: 'Increment Build Number'
 
 - script: |
@@ -70,7 +70,7 @@ steps:
 
     echo "Final BUNDLE_ID: $BUNDLE_ID"
     echo "##vso[task.setvariable variable=BUNDLE_ID]$BUNDLE_ID"
-    echo "##vso[task.logissue type=warning]Extracted Bundle ID: $BUNDLE_ID"
+    echo "##[debug]Extracted Bundle ID: $BUNDLE_ID"
 
     # Create ExportOptions.plist after extracting the Bundle ID
     EXPORT_DIR="$HOME/exports"
