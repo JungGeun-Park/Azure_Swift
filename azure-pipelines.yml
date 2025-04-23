@@ -1,14 +1,15 @@
 trigger:
-- main
+- develop
 
 pool:
   name: APPSEALING
 
 variables:
-  APPLE_ID: 'puzznic@inka.co.kr'
-  APP_SPECIFIC_PASSWORD: 'qbrz-hmfz-robj-eohm'
-  TEAM_ID: '22X77ENQ2H'
-  PROVISIONING_PROFILE_NAME: 'AppSealing Wildcard Distribution Profile'
+  APPLE_ID: $(APPLE_ID)
+  APP_SPECIFIC_PASSWORD: $(APP_SPECIFIC_PASSWORD)
+  TEAM_ID: $(TEAM_ID)
+  PROVISIONING_PROFILE_NAME: $(PROVISIONING_PROFILE_NAME)
+  P12_CERT_PASSWORD: $(P12_CERT_PASSWORD)
 
 steps:
 - script: |
@@ -33,10 +34,12 @@ steps:
     security set-keychain-settings -lut 3600 "$KEYCHAIN_PATH"
 
     echo "Importing distribution certificate (PKCS#12) into temporary keychain..."
-    security import "$P12_CERT_PATH" -k "$KEYCHAIN_PATH" -P "123456" -T /usr/bin/codesign
+    security import "$P12_CERT_PATH" -k "$KEYCHAIN_PATH" -P "$P12_CERT_PASSWORD" -T /usr/bin/codesign
     security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
     security find-identity -v "$KEYCHAIN_PATH"
   displayName: 'Setup Temporary Keychain and Install Certificate'
+  env:
+    P12_CERT_PASSWORD: $(P12_CERT_PASSWORD)
 
 - script: |
     SCHEME_NAME=$(xcodebuild -list -json | (python -c 'import sys, json; print(json.load(sys.stdin)["project"]["schemes"][0])' || python3 -c 'import sys, json; print(json.load(sys.stdin)["project"]["schemes"][0])'))
@@ -87,11 +90,11 @@ steps:
         <key>method</key>
         <string>app-store</string>
         <key>teamID</key>
-        <string>$(TEAM_ID)</string>
+        <string>$TEAM_ID</string>
         <key>provisioningProfiles</key>
         <dict>
             <key>$BUNDLE_ID</key>
-            <string>$(PROVISIONING_PROFILE_NAME)</string>
+            <string>$PROVISIONING_PROFILE_NAME</string>
         </dict>
     </dict>
     </plist>
@@ -100,7 +103,9 @@ steps:
     echo "ExportOptions.plist created with provisioningProfiles and bundle ID."
     cat "$EXPORT_DIR/ExportOptions.plist"  # Output the created plist content for debugging
   displayName: 'Extract Bundle ID and Create ExportOptions.plist'
-
+  env:
+    TEAM_ID: $(TEAM_ID)
+    PROVISIONING_PROFILE_NAME: $(PROVISIONING_PROFILE_NAME)
 
 - script: |
     # Define paths
@@ -120,8 +125,8 @@ steps:
                clean archive \
                CODE_SIGN_IDENTITY="iPhone Distribution" \
                CODE_SIGN_STYLE="Manual" \
-               DEVELOPMENT_TEAM="$(TEAM_ID)" \
-               PROVISIONING_PROFILE_SPECIFIER="$(PROVISIONING_PROFILE_NAME)" \
+               DEVELOPMENT_TEAM="$TEAM_ID" \
+               PROVISIONING_PROFILE_SPECIFIER="$PROVISIONING_PROFILE_NAME" \
                -archivePath "$ARCHIVE_PATH"
 
     echo "Exporting IPA..."
@@ -132,6 +137,9 @@ steps:
 
     echo "IPA successfully exported: $IPA_PATH"
   displayName: 'Build and Export IPA'
+  env:
+    TEAM_ID: $(TEAM_ID)
+    PROVISIONING_PROFILE_NAME: $(PROVISIONING_PROFILE_NAME)
 
 - script: |
     # Grant execution permission to generate_hash script
@@ -148,9 +156,11 @@ steps:
   displayName: 'Run generate_hash on IPA'
 
 - script: |
-    set -x
-    xcrun altool --upload-app -f "$(Build.ArtifactStagingDirectory)/$(APP_NAME).ipa" -t ios -u "$(APPLE_ID)" -p "$(APP_SPECIFIC_PASSWORD)"
+    xcrun altool --upload-app -f "$(Build.ArtifactStagingDirectory)/$(APP_NAME).ipa" -t ios -u "$APPLE_ID" -p "$APP_SPECIFIC_PASSWORD"
   displayName: 'Upload to TestFlight'
+  env:
+    APPLE_ID: $(APPLE_ID)
+    APP_SPECIFIC_PASSWORD: $(APP_SPECIFIC_PASSWORD)
 
 - script: |
     echo "Deleting temporary keychain..."
