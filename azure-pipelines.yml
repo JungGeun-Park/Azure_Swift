@@ -32,7 +32,7 @@ steps:
     security find-identity -v "$KEYCHAIN_PATH"
   displayName: 'Setup Temporary Keychain and Install Certificate'
   env:
-    P12_CERT_PASSWORD: $(P12_CERT_PASSWORD)
+    CERTIFICATE_PASSWORD: $(CERTIFICATE_PASSWORD)
 
 - script: |
     SCHEME_NAME=$(xcodebuild -list -json | (python -c 'import sys, json; print(json.load(sys.stdin)["project"]["schemes"][0])' || python3 -c 'import sys, json; print(json.load(sys.stdin)["project"]["schemes"][0])'))
