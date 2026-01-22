@@ -32,7 +32,7 @@ steps:
     security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
 
     echo "Setting temporary keychain as default..."
-    security list-keychains -d user -s "$KEYCHAIN_PATH" login.keychain
+    security list-keychains -d user -s "$KEYCHAIN_PATH"
     security default-keychain -s "$KEYCHAIN_PATH"
     security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
     security set-keychain-settings -lut 3600 "$KEYCHAIN_PATH"
