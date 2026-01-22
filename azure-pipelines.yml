@@ -87,16 +87,8 @@ steps:
 - script: |
     set -euxo pipefail
 
-    SCHEME_NAME=$(xcodebuild -list -json | python3 - <<'EOF'
-      import json,sys
-      print(json.load(sys.stdin)["project"]["schemes"][0])
-      EOF
-      )
-    APP_NAME=$(xcodebuild -list -json | python3 - <<'EOF'
-      import json,sys
-      print(json.load(sys.stdin)["project"]["targets"][0])
-      EOF
-      )
+    SCHEME_NAME=$(xcodebuild -list -json | (python -c 'import sys, json; print(json.load(sys.stdin)["project"]["schemes"][0])' || python3 -c 'import sys, json; print(json.load(sys.stdin)["project"]["schemes"][0])'))
+    APP_NAME=$(xcodebuild -list -json | (python -c 'import sys, json; print(json.load(sys.stdin)["project"]["targets"][0])' || python3 -c 'import sys, json; print(json.load(sys.stdin)["project"]["targets"][0])'))
 
     echo "##vso[task.setvariable variable=SCHEME_NAME]$SCHEME_NAME"
     echo "##vso[task.setvariable variable=APP_NAME]$APP_NAME"
