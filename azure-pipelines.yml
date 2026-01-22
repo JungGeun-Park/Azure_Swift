@@ -62,11 +62,21 @@ steps:
 
     echo "Installing provisioning profile..."
     mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-    cp "$(Build.SourcesDirectory)/profile.mobileprovision" \
-       ~/Library/MobileDevice/Provisioning\ Profiles/
 
-    echo "===== INSTALLED PROFILES ====="
-    ls -al ~/Library/MobileDevice/Provisioning\ Profiles
+    PP_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
+    mkdir -p "$PP_DIR"
+
+    PP_UUID=$(
+      /usr/libexec/PlistBuddy -c 'Print :UUID' /dev/stdin \
+      <<< "$(security cms -D -i "$PROVISIONING_PROFILE_PATH")"
+    )
+
+    echo "Provisioning Profile UUID: $PP_UUID"
+
+    cp "$PROVISIONING_PROFILE_PATH" "$PP_DIR/$PP_UUID.mobileprovision"
+
+    ls -al "$PP_DIR"
+
 
     echo "===== PROFILE DETAIL ====="
     security cms -D -i "$(Build.SourcesDirectory)/profile.mobileprovision" > profile.plist
