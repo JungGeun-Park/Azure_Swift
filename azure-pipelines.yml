@@ -205,19 +205,47 @@ steps:
       OTHER_CODE_SIGN_FLAGS="--verbose"
 
     echo "===== EXPORT IPA ====="
+    echo "Exporting IPA..."
     xcodebuild -exportArchive \
       -archivePath "$ARCHIVE_PATH" \
-      -exportOptionsPlist "$EXPORT_DIR/ExportOptions.plist" \
-      -exportPath "$EXPORT_DIR" \
-      -verbose
+      -exportOptionsPlist "$HOME/exports/ExportOptions.plist" \
+      -exportPath "$EXPORT_DIR"
 
+    echo "IPA successfully exported: $IPA_PATH"
   displayName: 'Build and Export IPA'
   env:
     TEAM_ID: $(TEAM_ID)
+    PROVISIONING_PROFILE_NAME: $(PROVISIONING_PROFILE_NAME)
 
-# =========================================================
-# 7. Cleanup (UNCHANGED)
-# =========================================================
 - script: |
-    security delete-keychain "$HOME/Library/Keychains/temp-keychain.keychain-db" || true
+    # Grant execution permission to generate_hash script
+    HASH_SCRIPT_PATH="$(Build.SourcesDirectory)/AppSealingSDK/Tools/generate_hash"
+    IPA_PATH="$(Build.ArtifactStagingDirectory)/$(APP_NAME).ipa"
+
+    echo "Granting execution permission to generate_hash..."
+    chmod +x "$HASH_SCRIPT_PATH"
+
+    echo "Running generate_hash with IPA..."
+    "$HASH_SCRIPT_PATH" "$IPA_PATH"
+
+    echo "Hash generation completed."
+  displayName: 'Run generate_hash on IPA'
+
+- script: |
+    xcrun altool --upload-app -f "$(Build.ArtifactStagingDirectory)/$(APP_NAME).ipa" -t ios -u "$APPLE_ID" -p "$APP_SPECIFIC_PASSWORD"
+  displayName: 'Upload to TestFlight'
+  env:
+    APPLE_ID: $(APPLE_ID)
+    APP_SPECIFIC_PASSWORD: $(APP_SPECIFIC_PASSWORD)
+
+- script: |
+    echo "Deleting temporary keychain..."
+    TEMP_KEYCHAIN_PATH="$HOME/Library/Keychains/temp-keychain.keychain-db"
+    if [ -f "$TEMP_KEYCHAIN_PATH" ]; then
+        # Delete only the temporary keychain, not the default login keychain
+        security delete-keychain "$TEMP_KEYCHAIN_PATH"
+        echo "Temporary keychain deleted successfully."
+    else
+        echo "Temporary keychain not found. Skipping deletion."
+    fi
   displayName: 'Cleanup Temporary Keychain'
