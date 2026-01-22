@@ -16,7 +16,6 @@ steps:
     env | sort
 
     P12_CERT_PATH="$(Build.SourcesDirectory)/distribution.p12"
-    PROVISIONING_PROFILE_PATH="$(Build.SourcesDirectory)/profile.mobileprovision"
     KEYCHAIN_PATH="$HOME/Library/Keychains/temp-keychain.keychain-db"
     KEYCHAIN_PASSWORD="temp123"
 
@@ -59,6 +58,8 @@ steps:
 # =========================================================
 - script: |
     set -euxo pipefail
+
+    PROVISIONING_PROFILE_PATH="$(Build.SourcesDirectory)/profile.mobileprovision"
 
     echo "Installing provisioning profile..."
     mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
