@@ -3,3 +3,4 @@
 //
 
 #import "AppsealingiOS.h"
+#import "FileOperations.h"

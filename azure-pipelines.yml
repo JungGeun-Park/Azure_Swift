@@ -52,7 +52,7 @@ steps:
 
   displayName: 'Setup Temporary Keychain and Install Certificate'
   env:
-    CERTIFICATE_PASSWORD: $(P12_CERTIFICATE_PASSWORD)
+    CERTIFICATE_PASSWORD: $(CERTIFICATE_PASSWORD)
 
 # =========================================================
 # 2. Install Provisioning Profile (MISSING PART FIXED)
