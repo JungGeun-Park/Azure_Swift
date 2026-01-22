@@ -74,7 +74,24 @@ steps:
 - script: |
     set -e
     INFO_PLIST_PATH="${BUILD_SOURCESDIRECTORY}/${APP_NAME}/Info.plist"
-    BUNDLE_ID=$(/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$INFO_PLIST_PATH")
+    BUNDLE_ID=$(/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$INFO_PLIST_PATH" 2>/dev/null)
+
+    # If not found in Info.plist, use xcodebuild to extract it
+    if [[ -z "$BUNDLE_ID" ]]; then
+        echo "CFBundleIdentifier not found in Info.plist. Trying to extract it using xcodebuild..."
+        BUNDLE_ID=$(xcodebuild -showBuildSettings -project "${BUILD_SOURCESDIRECTORY}/Azure_Swift.xcodeproj" -scheme "${SCHEME_NAME}" | grep -E '^[[:space:]]*PRODUCT_BUNDLE_IDENTIFIER[[:space:]]*=' | sed 's/.*= //')
+    fi
+
+    # Ensure BUNDLE_ID is not empty
+    if [[ -z "$BUNDLE_ID" ]]; then
+        echo "Error: Bundle identifier not found."
+        exit 1
+    fi
+
+    echo "Final BUNDLE_ID: $BUNDLE_ID"
+    echo "##vso[task.setvariable variable=BUNDLE_ID]$BUNDLE_ID"
+    echo "##[debug]Extracted Bundle ID: $BUNDLE_ID"
+
     EXPORT_DIR="$HOME/exports"; mkdir -p "$EXPORT_DIR"
     cat << EOF > "$EXPORT_DIR/ExportOptions.plist"
       <?xml version="1.0" encoding="UTF-8"?>
