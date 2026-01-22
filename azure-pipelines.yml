@@ -25,20 +25,32 @@ steps:
     CERTIFICATE_PASSWORD: $(CERTIFICATE_PASSWORD)
 
 - script: |
-    set -e
-    PP_PATH="$(Build.SourcesDirectory)/profile.mobileprovision"
+    set -euxo pipefail
+
+    PROVISIONING_PROFILE_PATH="$(Build.SourcesDirectory)/profile.mobileprovision"
     PP_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
+
+    echo "Installing provisioning profile..."
     mkdir -p "$PP_DIR"
 
-    echo "=== CHECK profile.mobileprovision ==="
-    ls -al "$(Build.SourcesDirectory)"
-    ls -al "$(Build.SourcesDirectory)/profile.mobileprovision" || echo "❌ FILE NOT FOUND"
-    file "$(Build.SourcesDirectory)/profile.mobileprovision" || true
-    wc -c "$(Build.SourcesDirectory)/profile.mobileprovision" || true
+    TMP_PLIST="$(mktemp)"
+    security cms -D -i "$PROVISIONING_PROFILE_PATH" > "$TMP_PLIST"
 
-    PP_UUID=$(security cms -D -i "$PP_PATH" | /usr/libexec/PlistBuddy -c "Print :UUID" /dev/stdin)
-    cp "$PP_PATH" "$PP_DIR/$PP_UUID.mobileprovision"
-    echo "##vso[task.setvariable variable=PP_UUID]$PP_UUID"
+    PP_UUID=$(/usr/libexec/PlistBuddy -c 'Print :UUID' "$TMP_PLIST")
+
+    echo "Provisioning Profile UUID: $PP_UUID"
+    cp "$PROVISIONING_PROFILE_PATH" "$PP_DIR/$PP_UUID.mobileprovision"
+
+    ls -al "$PP_DIR"
+
+    echo "===== PROFILE DETAIL ====="
+    /usr/libexec/PlistBuddy -c "Print :Name" "$TMP_PLIST"
+    /usr/libexec/PlistBuddy -c "Print :UUID" "$TMP_PLIST"
+    /usr/libexec/PlistBuddy -c "Print :TeamIdentifier" "$TMP_PLIST"
+    /usr/libexec/PlistBuddy -c "Print :ExpirationDate" "$TMP_PLIST"
+    /usr/libexec/PlistBuddy -c "Print :Entitlements:application-identifier" "$TMP_PLIST"
+
+    echo "##vso[task.setvariable variable=PROFILE_UUID]$PP_UUID"
   displayName: 'Install Provisioning Profile'
 
 - script: |
