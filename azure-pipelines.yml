@@ -102,19 +102,12 @@ steps:
 # 4. Increment Build Number (PATH LOG ONLY)
 # =========================================================
 - script: |
-    set -euxo pipefail
-
-    echo "===== AGVTOOL PATH CHECK ====="
-    pwd
-    ls -al
-
-    cd "$(Build.SourcesDirectory)/$(APP_NAME).xcodeproj"
+    # Automatically increment build number
+    cd "/Users/puzznic/Project/Azure_Agent/_work/2/s/$(APP_NAME).xcodeproj"
     agvtool next-version -all
     NEW_BUILD_NUMBER=$(agvtool what-version -terse)
-
     echo "##vso[task.setvariable variable=BUILD_NUMBER]$NEW_BUILD_NUMBER"
-    echo "[DEBUG] New Build Number: $NEW_BUILD_NUMBER"
-
+    echo "##[debug] New Build Number: $NEW_BUILD_NUMBER"
   displayName: 'Increment Build Number'
 
 # =========================================================
