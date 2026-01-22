@@ -29,6 +29,13 @@ steps:
     PP_PATH="$(Build.SourcesDirectory)/profile.mobileprovision"
     PP_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
     mkdir -p "$PP_DIR"
+
+    echo "=== CHECK profile.mobileprovision ==="
+    ls -al "$(Build.SourcesDirectory)"
+    ls -al "$(Build.SourcesDirectory)/profile.mobileprovision" || echo "❌ FILE NOT FOUND"
+    file "$(Build.SourcesDirectory)/profile.mobileprovision" || true
+    wc -c "$(Build.SourcesDirectory)/profile.mobileprovision" || true
+
     PP_UUID=$(security cms -D -i "$PP_PATH" | /usr/libexec/PlistBuddy -c "Print :UUID" /dev/stdin)
     cp "$PP_PATH" "$PP_DIR/$PP_UUID.mobileprovision"
     echo "##vso[task.setvariable variable=PP_UUID]$PP_UUID"
@@ -50,16 +57,16 @@ steps:
     BUNDLE_ID=$(/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$INFO_PLIST_PATH")
     EXPORT_DIR="$HOME/exports"; mkdir -p "$EXPORT_DIR"
     cat << EOF > "$EXPORT_DIR/ExportOptions.plist"
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0"><dict>
-    <key>method</key><string>app-store-connect</string>
-    <key>signingStyle</key><string>manual</string>
-    <key>teamID</key><string>$TEAM_ID</string>
-    <key>provisioningProfiles</key><dict>
-    <key>$BUNDLE_ID</key><string>$PROVISIONING_PROFILE_NAME</string>
-    </dict></dict></plist>
-    EOF
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0"><dict>
+      <key>method</key><string>app-store-connect</string>
+      <key>signingStyle</key><string>manual</string>
+      <key>teamID</key><string>$TEAM_ID</string>
+      <key>provisioningProfiles</key><dict>
+      <key>$BUNDLE_ID</key><string>$PROVISIONING_PROFILE_NAME</string>
+      </dict></dict></plist>
+      EOF
   displayName: 'Create ExportOptions'
   env:
     TEAM_ID: $(TEAM_ID)
