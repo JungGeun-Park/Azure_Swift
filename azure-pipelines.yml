@@ -110,6 +110,14 @@ steps:
     echo "Updating Deployment Target to 12.0..."
     /usr/libexec/PlistBuddy -c "Set :IPHONEOS_DEPLOYMENT_TARGET 12.0" "$(Build.SourcesDirectory)/$(APP_NAME)/Info.plist"
 
+    # profile 캐시 제거
+    rm -rf ~/Library/MobileDevice/Provisioning\ Profiles/*
+    cp "$PROVISIONING_PROFILE_PATH" ~/Library/MobileDevice/Provisioning\ Profiles/
+
+    # UUID 추출
+    PROFILE_UUID=$(security cms -D -i "$PROVISIONING_PROFILE_PATH" | \
+      /usr/libexec/PlistBuddy -c "Print :UUID" /dev/stdin)
+
     echo "Starting Xcode Archive..."
     xcodebuild -workspace "$WORKSPACE_PATH" \
                -scheme '$(SCHEME_NAME)' \
@@ -119,7 +127,7 @@ steps:
                CODE_SIGN_IDENTITY="Apple Distribution" \
                CODE_SIGN_STYLE="Manual" \
                DEVELOPMENT_TEAM="$TEAM_ID" \
-               PROVISIONING_PROFILE_SPECIFIER="$PROVISIONING_PROFILE_NAME" \
+               PROVISIONING_PROFILE="$PROFILE_UUID" \
                -archivePath "$ARCHIVE_PATH"
 
     echo "Exporting IPA..."
