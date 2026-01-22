@@ -207,7 +207,7 @@ steps:
     echo "===== EXPORT IPA ====="
     xcodebuild -exportArchive \
       -archivePath "$ARCHIVE_PATH" \
-      -exportOptionsPlist "$HOME/exports/ExportOptions.plist" \
+      -exportOptionsPlist "$EXPORT_DIR/ExportOptions.plist" \
       -exportPath "$EXPORT_DIR" \
       -verbose
 
