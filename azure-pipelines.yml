@@ -54,13 +54,21 @@ steps:
   displayName: 'Install Provisioning Profile'
 
 - script: |
-    SCHEME_NAME=$(xcodebuild -list -json | python3 -c 'import sys,json;print(json.load(sys.stdin)["project"]["schemes"][0])'); APP_NAME=$(xcodebuild -list -json | python3 -c 'import sys,json;print(json.load(sys.stdin)["project"]["targets"][0])'); echo "##vso[task.setvariable variable=SCHEME_NAME]$SCHEME_NAME"; echo "##vso[task.setvariable variable=APP_NAME]$APP_NAME"
-  displayName: 'Extract Scheme & App Name'
+    SCHEME_NAME=$(xcodebuild -list -json | (python -c 'import sys, json; print(json.load(sys.stdin)["project"]["schemes"][0])' || python3 -c 'import sys, json; print(json.load(sys.stdin)["project"]["schemes"][0])'))
+    APP_NAME=$(xcodebuild -list -json | (python -c 'import sys, json; print(json.load(sys.stdin)["project"]["targets"][0])' || python3 -c 'import sys, json; print(json.load(sys.stdin)["project"]["targets"][0])'))
+    echo "##vso[task.setvariable variable=SCHEME_NAME]$SCHEME_NAME"
+    echo "##vso[task.setvariable variable=APP_NAME]$APP_NAME"
+    echo "##[debug] Extracted SCHEME_NAME: $SCHEME_NAME"
+    echo "##[debug] Extracted APP_NAME: $APP_NAME"
+  displayName: 'Extract Scheme and App Name'
 
 - script: |
-    set -e
-    cd "$(Build.SourcesDirectory)/$(APP_NAME).xcodeproj"
+    # Automatically increment build number
+    cd "/Users/puzznic/Project/Azure_Agent/_work/2/s/$(APP_NAME).xcodeproj"
     agvtool next-version -all
+    NEW_BUILD_NUMBER=$(agvtool what-version -terse)
+    echo "##vso[task.setvariable variable=BUILD_NUMBER]$NEW_BUILD_NUMBER"
+    echo "##[debug] New Build Number: $NEW_BUILD_NUMBER"
   displayName: 'Increment Build Number'
 
 - script: |
